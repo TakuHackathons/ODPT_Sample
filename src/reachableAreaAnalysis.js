@@ -2,7 +2,11 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 
 
-reachableAreaAnalysis(35.6439, 139.6993, 100, false, 43200, 3600);
+reachableAreaAnalysis(35.6439, 139.6993, 100, false, 43200, 3600)
+    .then(result => {
+        console.log(result);
+    });
+
 
 // lat: 緯度
 // lon: 経度
@@ -25,7 +29,7 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
     let busStopInfo = [];
 
     // ①指定した地点の近辺にあるバス停を取得するためのURL
-    const getNearBusstopPoleURL = {
+    const getNearBusStopPoleURL = {
         method: 'get',
         maxBodyLength: Infinity,
         url: baseUrl + 'places/odpt:BusstopPole?lon=' + lon + '&lat=' + lat + '&radius=' + radius + '&acl:consumerKey=' + apiKey,
@@ -33,7 +37,7 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
     };
 
     // ①リクエスト
-    await axios.request(getNearBusstopPoleURL)
+    await axios.request(getNearBusStopPoleURL)
         .then((response) => {
             //console.log(response.data);
             response.data.forEach(entry => {
@@ -58,13 +62,13 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
 
 
     // ②到達可能なバス停を全て格納
-    let reachableBusstopPoles = [];
+    let reachableBusStopPoles = [];
 
     // ②到達可能なバス停を探索
     for (let i = 0; i < busStopInfo.length; i++) {
         for (let j = 0; j < busStopInfo[i]["busRoutePattern"].length; j++) {
 
-            // ②指定した系統のバス時刻表を取得するためのURL
+            // 指定した系統のバス時刻表を取得するためのURL
             const getBusTimetableURL = {
                 method: 'get',
                 maxBodyLength: Infinity,
@@ -75,7 +79,7 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
             // バス停の識別子
             const busStopPole = busStopInfo[i]["busStopPole"];
 
-            // ②リクエスト
+            // リクエスト
             await axios.request(getBusTimetableURL)
                 .then((response) => {
                     //console.log(response.data);
@@ -117,7 +121,7 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
 
                                 // 空配列が入ってくるので除外する
                                 if (subsequentObjects.length) {
-                                    reachableBusstopPoles.push(subsequentObjects);
+                                    reachableBusStopPoles.push(subsequentObjects);
                                 }
 
                                 // 一気に外まで抜ける
@@ -133,12 +137,72 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
     }
 
     // ②確認
-    console.log(reachableBusstopPoles);
-    console.log();
+    //console.log(reachableBusStopPoles);
+    //console.log();
 
 
     // ③到達可能なバス停情報を全て格納
-    let reachableBusstopInfo = [];
+    let reachableBusStopInfo = [];
 
+    // ③到達可能なバス停情報を探索
+    for (let i = 0; i < reachableBusStopPoles.length; i++) {
+        for (let j = 0; j < reachableBusStopPoles[i].length; j++) {
 
+            const busObj = reachableBusStopPoles[i][j];
+
+            // "busTimetableObject"の要素は"arrivalTime"か"departureTime"の
+            // どちらかのプロパティしか持っていないためここで判定を行う。
+            const busArrivalTime_String = 'odpt:arrivalTime' in busObj ? busObj['odpt:arrivalTime'] : busObj['odpt:departureTime'];
+
+            // 各バスの到着時刻を取得
+            const [hours, minutes] = busArrivalTime_String.split(':').map(Number);
+            const busArrivalTime = hours * 60 * 60 + minutes * 60;
+
+            // 指定したバス停情報を取得するためのURL
+            const getReachableBusstopInfoURL = {
+                method: 'get',
+                maxBodyLength: Infinity,
+                url: baseUrl + 'odpt:BusstopPole?owl:sameAs=' + busObj['odpt:busstopPole'] + '&acl:consumerKey=' + apiKey,
+                headers: {}
+            };
+
+            // リクエスト
+            await axios.request(getReachableBusstopInfoURL)
+                .then((response) => {
+                    //console.log(response.data);
+                    response.data.forEach(entry => {
+                        //console.log(entry);
+                        reachableBusStopInfo.push(
+                            {
+                                // バス停名
+                                busStopName: entry["dc:title"],
+                                // 緯度
+                                lat: entry["geo:lat"],
+                                // 経度
+                                lon: entry["geo:long"],
+                                // 到着時刻
+                                arrivalTime: busArrivalTime
+                            }
+                        );
+                    });
+                })
+                .catch((error) => {
+                    console.log(error);
+                });
+
+        }
+    }
+
+    // ④ソート
+    reachableBusStopInfo.sort((a, b) => a.arrivalTime - b.arrivalTime);
+
+    // ⑤重複削除
+    reachableBusStopInfo = reachableBusStopInfo.filter(
+        (element, index, self) => self.findIndex((e) => e.busStopName === element.busStopName) === index
+    );
+
+    // ⑤確認
+    //console.log(reachableBusStopInfo);
+
+    return reachableBusStopInfo;
 }
