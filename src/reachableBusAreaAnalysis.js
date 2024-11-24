@@ -2,12 +2,6 @@ import axios from 'axios';
 import dotenv from 'dotenv';
 
 
-reachableAreaAnalysis(35.6439, 139.6993, 100, false, 43200, 3600)
-    .then(result => {
-        console.log(result);
-    });
-
-
 // lat: 緯度
 // lon: 経度
 // radius: 緯度、経度から半径何[m]を対象に探索するか（0〜4000[m]）
@@ -15,7 +9,7 @@ reachableAreaAnalysis(35.6439, 139.6993, 100, false, 43200, 3600)
 // departureTime: バス停・駅からの出発時刻（0:00からの経過時間（秒）で設定）
 // reqiredTime: 出発（バス停・駅）から到着（バス停・駅）までの期待する許容時間（秒）を設定
 
-async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime, requiredTime) {
+async function reachableBusAreaAnalysis(lat, lon, radius, isHoliday, departureTime, requiredTime) {
 
     const baseUrl = "https://api-challenge2024.odpt.org/api/v4/";
 
@@ -206,3 +200,5 @@ async function reachableAreaAnalysis(lat, lon, radius, isHoliday, departureTime,
 
     return reachableBusStopInfo;
 }
+
+export { reachableBusAreaAnalysis }
