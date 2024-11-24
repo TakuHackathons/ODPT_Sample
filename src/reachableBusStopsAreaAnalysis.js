@@ -9,7 +9,7 @@ import dotenv from 'dotenv';
 // departureTime: バス停からの出発時刻（0:00からの経過時間（秒）で設定）
 // reqiredTime: 出発（バス停）から到着（バス停）までの期待する許容時間（秒）を設定
 
-async function reachableBusAreaAnalysis(lat, lon, radius, isHoliday, departureTime, requiredTime) {
+async function reachableBusStopsAreaAnalysis(lat, lon, radius, isHoliday, departureTime, requiredTime) {
 
     const baseUrl = "https://api-challenge2024.odpt.org/api/v4/";
 
@@ -201,4 +201,4 @@ async function reachableBusAreaAnalysis(lat, lon, radius, isHoliday, departureTi
     return reachableBusStopInfo;
 }
 
-export { reachableBusAreaAnalysis }
+export { reachableBusStopsAreaAnalysis }
