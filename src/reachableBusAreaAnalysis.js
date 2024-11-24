@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 // lon: 経度
 // radius: 緯度、経度から半径何[m]を対象に探索するか（0〜4000[m]）
 // isHoliday: 休日ならTrue
-// departureTime: バス停・駅からの出発時刻（0:00からの経過時間（秒）で設定）
-// reqiredTime: 出発（バス停・駅）から到着（バス停・駅）までの期待する許容時間（秒）を設定
+// departureTime: バス停からの出発時刻（0:00からの経過時間（秒）で設定）
+// reqiredTime: 出発（バス停）から到着（バス停）までの期待する許容時間（秒）を設定
 
 async function reachableBusAreaAnalysis(lat, lon, radius, isHoliday, departureTime, requiredTime) {
 
